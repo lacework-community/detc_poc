@@ -1,0 +1,19 @@
+{
+  "name": "loadgen",
+  "version": "1.0.0",
+  "description": "Generates load against vote app",
+  "main": "loadgen.js",
+  "scripts": {
+   "start": "node loadgen.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "loadgen",
+    "heroku"
+  ],
+  "author": "lacework",
+  "license": "MIT",
+  "dependencies": {
+    "request": "*"
+  }
+}

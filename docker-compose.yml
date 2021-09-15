@@ -1,0 +1,48 @@
+version: "3.9"
+    
+services:
+  base:
+    build: 
+      context: ./
+      dockerfile: Dockerfile
+    stdin_open: true
+    tty: true
+    volumes:
+      - .:/root
+    working_dir: /root
+    restart: always
+    environment:
+      foo: bar
+
+  detc:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    stdin_open: true
+    tty: true
+    volumes:
+      - ./:/root
+      - ./terraform:/terraform
+      - ./lacework:/lacework
+      - ./deploys:/deploys
+    working_dir: /root
+    restart: always
+    environment:
+      # AWS key/secret/region
+      AWS_ACCESS_KEY_ID: REPLACE_WITH_AWS_ACCESS_KEY_ID
+      AWS_SECRET_ACCESS_KEY: REPLACE_WITH_AWS_SECRET_ACCESS_KEY
+      TF_VAR_AWS_REGION: REPLACE_WITH_AWS_REGION
+
+      # What to prefix any cloud assets created
+      TF_VAR_DEPLOYMENT_NAME: salesdemo
+
+      # Lacework access token
+      LACEWORK_ACCESS_TOKEN: REPLACE_WITH_LACEWORK_ACCESS_TOKEN
+
+      # GCP project id/region
+      TF_VAR_GCP_PROJECT_ID: REPLACE_WITH_GCP_PROJECT_ID
+      TF_VAR_GCP_REGION: REPLACE_WITH_GCP_REGION
+
+      # Azure app id/password
+      TF_VAR_AZURE_APP_ID: REPLACE_WITH_AZURE_APP_ID
+      TF_VAR_AZURE_PASSWORD: REPLACE_WITH_AZURE_PASSWORD
