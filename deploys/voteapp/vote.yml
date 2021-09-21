@@ -111,13 +111,18 @@ metadata:
   name: result
   labels:
     app: result
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: nlb
+    service.beta.kubernetes.io/aws-load-balancer-proxy-protocol: '*'
+    service.beta.kubernetes.io/aws-load-balancer-backend-protocol: 'tcp'
 spec:
   type: LoadBalancer
   externalTrafficPolicy: Local
   ports:
-  - port: 5001
+  - name: result-service
+    port: 5001
+    protocol: TCP
     targetPort: 80
-    name: result-service
   selector:
     app: result
 ---
@@ -152,13 +157,18 @@ metadata:
   name: vote
   labels:
     apps: vote
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: nlb
+    service.beta.kubernetes.io/aws-load-balancer-proxy-protocol: '*'
+    service.beta.kubernetes.io/aws-load-balancer-backend-protocol: 'tcp'
 spec:
   type: LoadBalancer
   externalTrafficPolicy: Local
   ports:
-    - port: 80
+    - name: vote-service
+      port: 80
+      protocol: TCP
       targetPort: 80
-      name: vote-service
   selector:
     app: vote
 ---
