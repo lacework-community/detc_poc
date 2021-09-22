@@ -23,12 +23,6 @@ Make sure to have all of these items ready before using this project:
 * access to a Lacework tenant with admin privileges
 * Docker and docker-compose setup on a computer
 
-## Build DETC Docker image locally
-
-Currently the docker image needs to be built locally to run locally.  Simply run this command and enjoy a warm beverage:
-
-   docker-compose build
-
 ## Provision a K8 Cluster
 
 Each cloud account/cluster has a README file that covers how to get the cluster provisioned, because each cloud is special.

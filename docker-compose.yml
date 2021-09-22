@@ -15,9 +15,7 @@ services:
       foo: bar
 
   detc:
-    build:
-      context: ./
-      dockerfile: Dockerfile
+    image: detcaccounts/detc-poc
     stdin_open: true
     tty: true
     volumes:
