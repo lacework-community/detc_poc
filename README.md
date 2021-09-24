@@ -23,6 +23,16 @@ Make sure to have all of these items ready before using this project:
 * access to a Lacework tenant with admin privileges
 * Docker and docker-compose setup on a computer
 
+## Tools available in the docker container
+
+   terraform: 1.0.6
+   heroku cli: 7.59.0
+   kubectl: 1.22.1
+   helm: 3.0.2
+   aws cli: 1.20.48
+   azure cli: 2.0.81
+   gcp cli: 358.0.0
+
 ## Provision a K8 Cluster
 
 Each cloud account/cluster has a README file that covers how to get the cluster provisioned, because each cloud is special.

@@ -22,6 +22,6 @@ Open the Azure Portal in a web browser and search for 'app registration' and cli
 
 ## Destory Kubectl AKS K8 Cluster
 
-   docker-compose run detc k8 eks terraform destroy --skip-undeployment=true
+   docker-compose run detc k8 aks terraform destroy --skip-undeployment=true
 
 

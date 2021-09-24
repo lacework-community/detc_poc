@@ -33,6 +33,12 @@ RUN curl https://cli-assets.heroku.com/install-ubuntu.sh | sh
 RUN wget -O /bin/kubectl https://dl.k8s.io/release/$(wget -O-  -q https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl \
     && chmod +x /bin/kubectl
 
+# helm
+RUN wget -O /tmp/helm-v3.0.2-linux-amd64.tar.gz https://get.helm.sh/helm-v3.0.2-linux-amd64.tar.gz \
+    && tar xvf /tmp/helm-v3.0.2-linux-amd64.tar.gz -C /tmp \
+    && chmod +x /tmp/linux-amd64/helm \
+    && mv /tmp/linux-amd64/helm /usr/local/bin/helm
+
 # aws cli
 RUN pip3 install --upgrade pip
 RUN pip3 install awscli
