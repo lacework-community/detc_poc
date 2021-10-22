@@ -1,0 +1,15 @@
+version: "3.9"
+    
+services:
+  attack:
+    build: 
+      context: ./
+      dockerfile: Dockerfile
+    stdin_open: true
+    tty: true
+    volumes:
+      - .:/root
+    working_dir: /root
+    restart: always
+    environment:
+      foo: bar
