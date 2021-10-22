@@ -34,7 +34,7 @@ Note: you will need to be with the root directory of this repo to run the comman
 
 ## Get help on what commands and attacks can be run
 
-    docker-compose run attack node attacka_a_pod.js -h
+    docker-compose run attack node attack_a_pod.js -h
 
 ## Run attack on a pod
 

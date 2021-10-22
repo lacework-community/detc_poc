@@ -17,7 +17,7 @@ module.exports = {
       console.log("Must supply an attack to run");
       process.exit(1);
     }else if(!attacks[options['attack']]){
-      console.log('Attack ' + options['attack'] +' in not valid!')
+      console.log('Attack ' + options['attack'] +' is not valid!')
       process.exit(1);
     }
     return options['attack']
@@ -52,7 +52,7 @@ module.exports = {
     console.log('Command being run: ' + command)
     while(command_ran == false){
       console.log('    Trying to run command on attack pod')
-      await module.exports.run_single_comand(page, command)
+      await module.exports.run_single_command(page, command)
 
       // wait for 'DONE' text to appear in the 'results' textarea
       await page.waitForFunction('document.querySelector("#result").value.includes("DONE:")', {timeout: 60000});
@@ -78,7 +78,7 @@ module.exports = {
     // check to see if there is a pods already setup for attacking
     for(var i=0; i < times; i++){
       console.log('    Checking pods attempt: ' + i + '/' + times)
-      let success = await module.exports.run_single_comand(page,"ls")
+      let success = await module.exports.run_single_command(page,"ls")
 
       if(success){
         found = true
@@ -109,7 +109,7 @@ module.exports = {
     }
   },
 
-  run_single_comand: async function (page, command) {
+  run_single_command: async function (page, command) {
     command = "[ -f \'./thispod\' ] && (" + command + "; echo \'DONE: success\') || (echo \'DONE: failed\')"
 
     // clear any existing text from the command/result text areas

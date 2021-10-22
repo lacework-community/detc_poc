@@ -79,7 +79,7 @@ async function run () {
     .option('-u, --url <vote_app_url>', 'url of the vote app')
     .option('-a, --attack <attack_to_run>', 'attacks: ' + Object.keys(attacks).toString())
     .option('-r, --remote <remote_host_ip>', 'attackers remote host ip address')
-    .option('-d, --dirname <remote_host_ip>', 'attackers remote host ip address')
+    .option('-d, --dirname <directory_name>', 'directory name to create for test attack')
     .option('-v, --verbose', 'verbose output and screenshots')
   program.parse(process.argv);
   const options = program.opts();
