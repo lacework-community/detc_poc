@@ -1,0 +1,62 @@
+name: Scan images in Lacework
+on:
+  workflow_dispatch:
+  schedule:
+    - cron:  '* 0 * * *'
+
+jobs:
+  scan:
+    strategy:
+      matrix:
+        image: [detcaccounts/resultsapp, detcaccounts/voteapp, detcaccounts/worker]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+      - name: Scan container images for vulnerabitilies using Lacework (Account 1)
+        uses: timarenz/lw-scanner-action@v0.3.0
+        env:
+          LW_ACCOUNT_NAME: ${{ secrets.LW_ACCOUNT_NAME1 }}
+          LW_ACCESS_TOKEN: ${{ secrets.LW_ACCESS_TOKEN1 }}
+          LW_SCANNER_SCAN_LIBRARY_PACKAGES: true
+          LW_SCANNER_SAVE_RESULTS: true
+        with:
+          image_name: ${{ matrix.image }}
+          image_tag: latest
+
+      - name: Scan container images for vulnerabitilies using Lacework (Account 2)
+        uses: timarenz/lw-scanner-action@v0.3.0
+        env:
+          LW_ACCOUNT_NAME: ${{ secrets.LW_ACCOUNT_NAME2 }}
+          LW_ACCESS_TOKEN: ${{ secrets.LW_ACCESS_TOKEN2 }}
+          LW_SCANNER_SCAN_LIBRARY_PACKAGES: true
+          LW_SCANNER_SAVE_RESULTS: true
+        with:
+          image_name: ${{ matrix.image }}
+          image_tag: latest
+
+      - name: Scan container images for vulnerabitilies using Lacework (Account 3)
+        uses: timarenz/lw-scanner-action@v0.3.0
+        env:
+          LW_ACCOUNT_NAME: ${{ secrets.LW_ACCOUNT_NAME3 }}
+          LW_ACCESS_TOKEN: ${{ secrets.LW_ACCESS_TOKEN3 }}
+          LW_SCANNER_SCAN_LIBRARY_PACKAGES: true
+          LW_SCANNER_SAVE_RESULTS: true
+        with:
+          image_name: ${{ matrix.image }}
+          image_tag: latest
+
+      - name: Scan container images for vulnerabitilies using Lacework (Account 4)
+        uses: timarenz/lw-scanner-action@v0.3.0
+        env:
+          LW_ACCOUNT_NAME: ${{ secrets.LW_ACCOUNT_NAME4 }}
+          LW_ACCESS_TOKEN: ${{ secrets.LW_ACCESS_TOKEN4 }}
+          LW_SCANNER_SCAN_LIBRARY_PACKAGES: true
+          LW_SCANNER_SAVE_RESULTS: true
+        with:
+          image_name: ${{ matrix.image }}
+          image_tag: latest
