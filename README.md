@@ -1,5 +1,7 @@
 # Welcome to the DETC POC Project
 
+[![CIS](https://app.soluble.cloud/api/v1/public/badges/a546bb24-5d59-495a-a893-3b759f83ff58.svg)](https://app.soluble.cloud/repos/details/github.com/lacework-community/detc_poc)  [![IaC](https://app.soluble.cloud/api/v1/public/badges/28a2aece-7670-45c4-ab8b-fd09687745b2.svg)](https://app.soluble.cloud/repos/details/github.com/lacework-community/detc_poc)  [![HIPAA](https://app.soluble.cloud/api/v1/public/badges/b1d0fc00-331b-45a5-b318-f8d332039920.svg)](https://app.soluble.cloud/repos/details/github.com/lacework-community/detc_poc)  
+
 ## Intro
 
 The DETC POC project enables deploying a demo application into cloud accounts.  Currently this project can provision a K8 cluster, deploy a small web app onto the cluster, install the Lacework monitoring pods onto the cluster and drive traffic over the web app.  And of course all of the provisioned resources can be destroyed.
