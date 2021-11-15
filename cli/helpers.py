@@ -1,10 +1,12 @@
 import click
 import subprocess
+import shlex
 import time
 import sys
 import helpers
 import validators
 import os
+import json
 
 # Disable track back details
 sys.tracebacklimit = 0
@@ -73,7 +75,7 @@ def kubectl_apply(deployment_path):
   command = "kubectl apply -f {}".format(deployment_path)
   helpers.run_command(command)
 
-def terraform(action, path, deployment_path, skip_undeployment):
+def terraform(action, path, deployment_path, skip_undeployment, env_variables={}):
   terrform_action = action
 
   if "init" == action.lower():
@@ -91,9 +93,53 @@ def terraform(action, path, deployment_path, skip_undeployment):
     raise Exception("Terraform action '{}' is NOT valid.".format(action))
 
   terraform_command = "cd {}; terraform {}".format(path, terrform_action)
-  # click.echo(terraform_command)
+
+  for key, value in env_variables.items():
+    terraform_command = "export TF_VAR_{}='{}'; {}".format(key, value, terraform_command)
+
   helpers.run_command(terraform_command)
 
+def get_service_url_from_kubectl(service_name, cloud):
+  command = "kubectl get service -o=json --field-selector metadata.name={}".format(service_name)
+  out = helpers.run_command(command, False)
+  if(not out):
+    raise Exception("Can't connect to kubectl for '{}'".format(cloud))
+
+  service = json.loads(out)
+  try:
+    ip = port = None
+    if(cloud == "aws"):
+      ip = service["items"][0]['status']['loadBalancer']['ingress'][0]['hostname']
+
+    if(cloud == "gcp" or cloud == "azure"):
+      ip = service["items"][0]['status']['loadBalancer']['ingress'][0]['ip']
+
+    port = service["items"][0]['spec']['ports'][0]['port']
+    if(ip and port):
+      return "http://{}:{}".format(ip, port)
+  except IndexError:
+    raise Exception("Not able to get IP address for '{}', are any containers deployed?".format(service_name)) from None
+  except KeyError:
+    raise Exception("Not able to get IP address for '{}', IP address might not be ready quite yet?".format(service_name)) from None
+
+  raise Exception("Can't get ip address from cloud '{}'".format(cloud))
+
+def traffic_deploy(cloud):
+  vote_url = helpers.get_service_url_from_kubectl("vote", cloud)
+  result_url = helpers.get_service_url_from_kubectl("result", cloud)
+  env_variables = { "VOTE_URL": vote_url, "RESULT_URL": result_url }
+
+  terrform_path = "terraform/{}/traffic".format(cloud)
+  terraform("apply", terrform_path, "", True, env_variables)
+
+def traffic_destroy(cloud):
+  env_variables = { "VOTE_URL": "","RESULT_URL": ""}
+  terrform_path = "terraform/{}/traffic".format(cloud)
+  terraform("destroy", terrform_path, "", True, env_variables)
+
+def traffic_init(cloud):
+  terrform_path = "terraform/{}/traffic".format(cloud)
+  terraform("init", terrform_path, "", True)
 
 def lacework_deploy_pods():
   lacework_access_token = os.environ.get('LACEWORK_ACCESS_TOKEN')
@@ -132,7 +178,15 @@ def gcp_enable_services():
   command = "gcloud services enable container.googleapis.com"
   helpers.run_command(command)
 
-def run_command(command):
-  process = subprocess.Popen(command, shell=True)#, stdout=writer)
-  while process.poll() is None:
-      time.sleep(0.1)
+def run_command(command, print_output=True):
+  process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, encoding='utf-8')
+  output = ""
+  while True:
+    if process.poll() is not None:
+      break
+    data = process.stdout.readline()
+    output += data
+    if print_output == True:
+      print(data, end="")
+
+  return output

@@ -9,6 +9,27 @@ def cli():
   pass
 
 @cli.command()
+@click.argument("cloud")
+@click.argument("action")
+def traffic(cloud, action):
+  """Lacework: Deploy Agents Pods
+
+    \b
+    ACTION
+      deploy:
+      destroy:
+  """
+
+  if "init" == action.lower():
+    helpers.traffic_init(cloud)
+  elif "deploy" == action.lower():
+    helpers.traffic_deploy(cloud)
+  elif "destroy" == action.lower():
+    helpers.traffic_destroy(cloud)
+  else:
+    raise Exception("Traffic action '{}' is NOT known.".format(action))
+
+@cli.command()
 @click.argument("action")
 def lacework(action):
   """Lacework: Deploy Agents Pods
