@@ -124,22 +124,43 @@ def get_service_url_from_kubectl(service_name, cloud):
 
   raise Exception("Can't get ip address from cloud '{}'".format(cloud))
 
+def get_traffic_terraform_path(cloud):
+  path = "/terraform"
+  if 'aws' == cloud.lower():
+    path += "/aws/traffic"
+  elif 'azure' == cloud.lower():
+    path += "/azure/traffic"
+  elif 'gcp' == cloud.lower():
+    path += "/gcp/traffic"
+  else:
+    raise Exception("Cloud provider '{}' is NOT valid!".format(cloud))
+  return path
+
+def traffic_init(cloud):
+  terrform_path = get_traffic_terraform_path(cloud)
+  terraform("init", terrform_path, "", True)
+
+def traffic_plan(cloud):
+  vote_url = helpers.get_service_url_from_kubectl("vote", cloud)
+  result_url = helpers.get_service_url_from_kubectl("result", cloud)
+  env_variables = { "VOTE_URL": vote_url, "RESULT_URL": result_url }
+
+  terrform_path = get_traffic_terraform_path(cloud)
+  terraform("plan", terrform_path, "", True, env_variables)
+
 def traffic_deploy(cloud):
   vote_url = helpers.get_service_url_from_kubectl("vote", cloud)
   result_url = helpers.get_service_url_from_kubectl("result", cloud)
   env_variables = { "VOTE_URL": vote_url, "RESULT_URL": result_url }
 
-  terrform_path = "terraform/{}/traffic".format(cloud)
+  terrform_path = get_traffic_terraform_path(cloud)
   terraform("apply", terrform_path, "", True, env_variables)
 
 def traffic_destroy(cloud):
   env_variables = { "VOTE_URL": "","RESULT_URL": ""}
-  terrform_path = "terraform/{}/traffic".format(cloud)
+  terrform_path = get_traffic_terraform_path(cloud)
   terraform("destroy", terrform_path, "", True, env_variables)
 
-def traffic_init(cloud):
-  terrform_path = "terraform/{}/traffic".format(cloud)
-  terraform("init", terrform_path, "", True)
 
 def lacework_deploy_pods():
   lacework_access_token = os.environ.get('LACEWORK_ACCESS_TOKEN')

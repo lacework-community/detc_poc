@@ -1,5 +1,5 @@
 variable "GCP_REGION" {
-  description = "Azure region"
+  description = "GCP region"
 }
 
 variable "GCP_PROJECT_ID" {
@@ -52,8 +52,7 @@ resource "google_compute_instance" "default" {
                   "../../scripts/loadgen-vm-setup-script.sh",
                   {
                     "VOTE_URL"=var.VOTE_URL,
-                   "RESULT_URL"=var.RESULT_URL
+                    "RESULT_URL"=var.RESULT_URL
                   }
                  )}"
-
 }

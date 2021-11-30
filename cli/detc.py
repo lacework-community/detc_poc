@@ -11,17 +11,27 @@ def cli():
 @cli.command()
 @click.argument("cloud")
 @click.argument("action")
-def traffic(cloud, action):
-  """Lacework: Deploy Agents Pods
+def traffic_http(cloud, action):
+  """Traffic HTTP: provision a compute instance and install HTTP traffic driver
+
+     Example command: detc traffic-http aws init
 
     \b
+    CLOUD:
+      aws: cloud provider
+      azure: cloud provider
+      gcp: cloud provider
     ACTION
-      deploy:
-      destroy:
+      init: Initializes terraform modules
+      plan: Runs terraform plan for cloud provider
+      deploy:  Provision a compute instance and install the http traffic driver
+      destroy: Destroy a compute instance
   """
 
   if "init" == action.lower():
     helpers.traffic_init(cloud)
+  if "plan" == action.lower():
+    helpers.traffic_plan(cloud)
   elif "deploy" == action.lower():
     helpers.traffic_deploy(cloud)
   elif "destroy" == action.lower():

@@ -28,13 +28,24 @@ terraform {
       source  = "hashicorp/azurerm"
       version = "2.66.0"
     }
+    random = {
+      source = "hashicorp/random"
+      version = "3.1.0"
+    }
   }
-
   required_version = ">= 0.14"
 }
 
 provider "azurerm" {
   features {}
+}
+
+provider "random" {
+}
+
+resource "random_password" "password" {
+  length = 16
+  special = true
 }
 
 resource "azurerm_resource_group" "traffic" {
@@ -48,6 +59,8 @@ module "linuxservers" {
   vm_os_simple        = "UbuntuServer"
   public_ip_dns       = ["${local.cluster_name}vmips"]
   vnet_subnet_id      = module.network.vnet_subnets[0]
+  enable_ssh_key      = false
+  admin_password      = random_password.password.result
 
   depends_on = [azurerm_resource_group.traffic]
 
@@ -55,7 +68,7 @@ module "linuxservers" {
                   "../../scripts/loadgen-vm-setup-script.sh",
                   {
                     "VOTE_URL"=var.VOTE_URL,
-                   "RESULT_URL"=var.RESULT_URL
+                    "RESULT_URL"=var.RESULT_URL
                   }
                  )}"
 }
