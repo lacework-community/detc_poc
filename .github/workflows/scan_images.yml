@@ -29,49 +29,61 @@ jobs:
           echo "::set-output name=image::${image}"
           echo "::set-output name=tag::${tag}"
       - name: Scan container images for vulnerabitilies using Lacework (Account 1)
-        uses: timarenz/lw-scanner-action@v0.3.0
+        uses: timarenz/lw-scanner-action@v0.5.1
         if: always()
-        env:
+        with:
+          FAIL_BUILD: false
           LW_ACCOUNT_NAME: ${{ secrets.LW_ACCOUNT_NAME1 }}
           LW_ACCESS_TOKEN: ${{ secrets.LW_ACCESS_TOKEN1 }}
-          LW_SCANNER_SCAN_LIBRARY_PACKAGES: true
-          LW_SCANNER_SAVE_RESULTS: true
-        with:
-          image_name: ${{ steps.image-details.outputs.image }}
-          image_tag: ${{ steps.image-details.outputs.tag }}
+          SCAN_LIBRARY_PACKAGES: true
+          SAVE_RESULTS_IN_LACEWORK: true
+          IMAGE_NAME: ${{ steps.image-details.outputs.image }}
+          IMAGE_TAG: ${{ steps.image-details.outputs.tag }}
 
       - name: Scan container images for vulnerabitilies using Lacework (Account 2)
-        uses: timarenz/lw-scanner-action@v0.3.0
+        uses: timarenz/lw-scanner-action@v0.5.1
         if: always()
-        env:
+        with:
+          FAIL_BUILD: false
           LW_ACCOUNT_NAME: ${{ secrets.LW_ACCOUNT_NAME2 }}
           LW_ACCESS_TOKEN: ${{ secrets.LW_ACCESS_TOKEN2 }}
-          LW_SCANNER_SCAN_LIBRARY_PACKAGES: true
-          LW_SCANNER_SAVE_RESULTS: true
-        with:
-          image_name: ${{ steps.image-details.outputs.image }}
-          image_tag: ${{ steps.image-details.outputs.tag }}
+          SCAN_LIBRARY_PACKAGES: true
+          SAVE_RESULTS_IN_LACEWORK: true
+          IMAGE_NAME: ${{ steps.image-details.outputs.image }}
+          IMAGE_TAG: ${{ steps.image-details.outputs.tag }}
 
       - name: Scan container images for vulnerabitilies using Lacework (Account 3)
-        uses: timarenz/lw-scanner-action@v0.3.0
+        uses: timarenz/lw-scanner-action@v0.5.1
         if: always()
-        env:
+        with:
+          FAIL_BUILD: false
           LW_ACCOUNT_NAME: ${{ secrets.LW_ACCOUNT_NAME3 }}
           LW_ACCESS_TOKEN: ${{ secrets.LW_ACCESS_TOKEN3 }}
-          LW_SCANNER_SCAN_LIBRARY_PACKAGES: true
-          LW_SCANNER_SAVE_RESULTS: true
-        with:
-          image_name: ${{ steps.image-details.outputs.image }}
-          image_tag: ${{ steps.image-details.outputs.tag }}
+          SCAN_LIBRARY_PACKAGES: true
+          SAVE_RESULTS_IN_LACEWORK: true
+          IMAGE_NAME: ${{ steps.image-details.outputs.image }}
+          IMAGE_TAG: ${{ steps.image-details.outputs.tag }}
 
       - name: Scan container images for vulnerabitilies using Lacework (Account 4)
-        uses: timarenz/lw-scanner-action@v0.3.0
+        uses: timarenz/lw-scanner-action@v0.5.1
         if: always()
-        env:
+        with:
+          FAIL_BUILD: false
           LW_ACCOUNT_NAME: ${{ secrets.LW_ACCOUNT_NAME4 }}
           LW_ACCESS_TOKEN: ${{ secrets.LW_ACCESS_TOKEN4 }}
-          LW_SCANNER_SCAN_LIBRARY_PACKAGES: true
-          LW_SCANNER_SAVE_RESULTS: true
+          SCAN_LIBRARY_PACKAGES: true
+          SAVE_RESULTS_IN_LACEWORK: true
+          IMAGE_NAME: ${{ steps.image-details.outputs.image }}
+          IMAGE_TAG: ${{ steps.image-details.outputs.tag }}
+
+      - name: Scan container images for vulnerabitilies using Lacework (Account 5)
+        uses: timarenz/lw-scanner-action@v0.5.1
+        if: always()
         with:
-          image_name: ${{ steps.image-details.outputs.image }}
-          image_tag: ${{ steps.image-details.outputs.tag }}
+          FAIL_BUILD: false
+          LW_ACCOUNT_NAME: ${{ secrets.LW_ACCOUNT_NAME5 }}
+          LW_ACCESS_TOKEN: ${{ secrets.LW_ACCESS_TOKEN5 }}
+          SCAN_LIBRARY_PACKAGES: true
+          SAVE_RESULTS_IN_LACEWORK: true
+          IMAGE_NAME: ${{ steps.image-details.outputs.image }}
+          IMAGE_TAG: ${{ steps.image-details.outputs.tag }}
