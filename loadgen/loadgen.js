@@ -1,6 +1,7 @@
 // Indefinitely invokes calls to the vote and result applications
 
 const request = require('request');
+const fs = require('fs');
 
 const INTERVAL = 10000; // poll each service once every INTERVAL milliseconds
 
@@ -8,12 +9,16 @@ const INTERVAL = 10000; // poll each service once every INTERVAL milliseconds
 // Each of the URLS hashes can have multiple entries
 // Example:
 // { 'GCP': 'http://ip.address:port', 'AZURE': 'http://ip.address:port' }
-const RESULT_URLS = {
-  "google": "http://google.com"
-};
-const VOTE_URLS = {};
+const RESULT_URLS = loadJson('result_urls.json');
+const VOTE_URLS = loadJson('vote_urls.json');
 
 console.log("Starting up...")
+
+function loadJson(file_name) {
+  let raw_data = fs.readFileSync(file_name);
+  let json_data = JSON.parse(raw_data);
+  return json_data;
+}
 
 function loadResults() {
   for (const [cloud, url] of Object.entries(RESULT_URLS)) {
