@@ -108,7 +108,7 @@ resource "ssh_resource" "run_file" {
 
   file {
     destination = "/root/tf/main.tf"
-    content     = file("${path.module}/files/main.tf.source")
+    content     = file("${path.module}/files/main.tf.demo.source")
     permissions = "0660"
 
   }

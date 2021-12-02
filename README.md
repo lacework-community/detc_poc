@@ -76,11 +76,6 @@ depending on what it's used for.  This deployment will create additonal activity
     docker-compose run detc activity-generation [azure|gcp] init
     docker-compose run detc activity-generation [azure|gcp] [plan|deploy|destroy]
 
-
-> NOTE: For Azure deployments, on initial deploy the SSH resource may fail due to the public IP, VM, or firewall rule
-> state not being ready. There is a sleep in the Terraform deployment to prevent this, but in the event it does happen
-> simply re-run the deployment; all previous state will be preserved and the already deployed VM will be provisioned.
-
 ## Tearing it all down
 
 All the provisioned assets can be destroyed.
