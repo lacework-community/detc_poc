@@ -1,0 +1,53 @@
+variable "subscription" {
+  description = "Azure Subscription ID"
+}
+variable "address_prefix" {
+  description = "Address prefix to use"
+}
+
+variable "client_id" {}
+variable "client_secret" {}
+variable "tenant_id" {}
+
+provider "azurerm" {
+  subscription_id = var.subscription
+  client_id = var.client_id
+  client_secret = var.client_secret
+  tenant_id = var.tenant_id
+  features {}
+}
+
+resource "random_string" "name" {
+  length  = 16
+  special = false
+  upper   = false
+  number  = false
+}
+
+resource "azurerm_resource_group" "resourcegroup" {
+  name     = "rg-${random_string.name.result}"
+  location = "centralus"
+}
+
+resource "azurerm_network_security_group" "securitygroup" {
+  name                = "nsg-${random_string.name.result}"
+  location            = azurerm_resource_group.resourcegroup.location
+  resource_group_name = azurerm_resource_group.resourcegroup.name
+}
+
+resource "azurerm_virtual_network" "virtualnetwork" {
+  name                = "virtualNetwork1"
+  location            = azurerm_resource_group.resourcegroup.location
+  resource_group_name = azurerm_resource_group.resourcegroup.name
+  address_space       = ["10.0.0.0/16"]
+
+  subnet {
+    name           = "subnet-${random_string.name.result}"
+    address_prefix = var.address_prefix
+    security_group = azurerm_network_security_group.securitygroup.id
+  }
+
+  tags = {
+    environment = "Production"
+  }
+}

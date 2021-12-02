@@ -1,13 +1,12 @@
 import click
 import subprocess
-import shlex
-import time
 import sys
-import helpers
-import validators
 import os
 import json
+import helpers
+import validators
 
+from typing import Literal, Dict
 # Disable track back details
 sys.tracebacklimit = 0
 
@@ -124,20 +123,29 @@ def get_service_url_from_kubectl(service_name, cloud):
 
   raise Exception("Can't get ip address from cloud '{}'".format(cloud))
 
-def get_traffic_terraform_path(cloud):
-  path = "/terraform"
-  if 'aws' == cloud.lower():
-    path += "/aws/traffic"
-  elif 'azure' == cloud.lower():
-    path += "/azure/traffic"
-  elif 'gcp' == cloud.lower():
-    path += "/gcp/traffic"
-  else:
-    raise Exception("Cloud provider '{}' is NOT valid!".format(cloud))
-  return path
+def get_terraform_path(project, cloud):
+    """Derive appropriate terraform code path based on inputs"""
+    if not cloud or cloud not in ['aws', 'azure', 'gcp'] or not project or project not in ['traffic', 'activity']:
+        raise Exception("Cloud provider '{}' or project '{}' is NOT valid!".format(cloud, project))
+
+    return '/terraform/{}/{}'.format(cloud, project)
+
+def run_terraform(action: Literal["init", "plan", "destroy", "apply"],
+                  project: Literal["traffic", "activity"],
+                  cloud: Literal["aws", "azure", "gcp"],
+                  deployment_path: str = "",
+                  env_vars: Dict = {},
+                  skip_undeployment: bool = True) -> None:
+    """This function is used to launch terraform, supplying the appropriate project for where the source is and the
+    appropriate actions to take"""
+    terraform(action, get_terraform_path(project, cloud), deployment_path, skip_undeployment, env_vars)
+
+
+def activity_tf(cloud, action: Literal["init", "plan", "apply", "destroy"]):
+    run_terraform(action, "activity", cloud)
 
 def traffic_init(cloud):
-  terrform_path = get_traffic_terraform_path(cloud)
+  terrform_path = get_terraform_path('traffic', cloud)
   terraform("init", terrform_path, "", True)
 
 def traffic_plan(cloud):
@@ -145,7 +153,7 @@ def traffic_plan(cloud):
   result_url = helpers.get_service_url_from_kubectl("result", cloud)
   env_variables = { "VOTE_URL": vote_url, "RESULT_URL": result_url }
 
-  terrform_path = get_traffic_terraform_path(cloud)
+  terrform_path = get_terraform_path('traffic', cloud)
   terraform("plan", terrform_path, "", True, env_variables)
 
 def traffic_deploy(cloud):
@@ -153,12 +161,12 @@ def traffic_deploy(cloud):
   result_url = helpers.get_service_url_from_kubectl("result", cloud)
   env_variables = { "VOTE_URL": vote_url, "RESULT_URL": result_url }
 
-  terrform_path = get_traffic_terraform_path(cloud)
+  terrform_path = get_terraform_path('traffic', cloud)
   terraform("apply", terrform_path, "", True, env_variables)
 
 def traffic_destroy(cloud):
   env_variables = { "VOTE_URL": "","RESULT_URL": ""}
-  terrform_path = get_traffic_terraform_path(cloud)
+  terrform_path = get_terraform_path('traffic', cloud)
   terraform("destroy", terrform_path, "", True, env_variables)
 
 
