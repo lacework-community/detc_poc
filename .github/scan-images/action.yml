@@ -1,0 +1,46 @@
+name: 'scan-images'
+description: 'Composite action to scan images'
+inputs:
+  matrix_details:
+    description: "JSON string with matrix secrets"
+    required: true
+  account:
+    description: "what account to scan"
+    required: true
+  image:
+    description: "what image to scan"
+    required: true
+  docker_username:
+    description: "username to login to docker hub with"
+    required: true
+  docker_access_token:
+    description: "access token to login to docker hub with"
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/checkout@v1
+    - id: set-secrets
+      uses: ./.github/set-secrets
+      with:
+        matrix_details: ${{ inputs.matrix_details }}
+      env:
+        IMAGE: ${{ inputs.image }}
+        ACCOUNT: ${{ inputs.account }}
+
+    - name: Login to Docker Hub
+      uses: docker/login-action@v1
+      with:
+        username: ${{ inputs.docker_username }}
+        password: ${{ inputs.docker_access_token }}
+
+    - name: Scan container images for vulnerabitilies using Lacework (Account 1)
+      uses: timarenz/lw-scanner-action@v0.5.1
+      with:
+        FAIL_BUILD: false
+        LW_ACCOUNT_NAME: ${{ steps.set-secrets.outputs.account }}
+        LW_ACCESS_TOKEN: ${{ steps.set-secrets.outputs.access_token }}
+        SCAN_LIBRARY_PACKAGES: true
+        SAVE_RESULTS_IN_LACEWORK: true
+        IMAGE_NAME: ${{ steps.set-secrets.outputs.image }}
+        IMAGE_TAG: ${{ steps.set-secrets.outputs.image_tag }}

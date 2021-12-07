@@ -1,89 +1,52 @@
 name: Scan images in Lacework
-on:
+
+on: 
   workflow_dispatch:
   schedule:
     - cron:  '* 0 * * *'
 
 jobs:
-  scan:
-    strategy:
-      matrix:
-        image:
-        - detcaccounts/resultsapp_latest
-        - detcaccounts/voteapp_latest
-        - detcaccounts/worker_latest
-        - postgres_9.4
-        - ubuntu_latest
-        - redis_alpine
+  build_matrix:
     runs-on: ubuntu-latest
     steps:
-      - name: Login to Docker Hub
-        uses: docker/login-action@v1
+      - uses: actions/checkout@v1
+      - id: build-matrix
+        uses: ./.github/build-matrix
         with:
-          username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-      - id: image-details
-        run: |
-          image=$(echo ${{ matrix.image }} | cut -d_ -f1)
-          tag=$(echo ${{ matrix.image }} | cut -d_ -f2)
-          echo "::set-output name=image::${image}"
-          echo "::set-output name=tag::${tag}"
-      - name: Scan container images for vulnerabitilies using Lacework (Account 1)
-        uses: timarenz/lw-scanner-action@v0.5.1
-        if: always()
+          matrix_details: ${{ secrets.MATRIX_INFO }}
+      - uses: actions/upload-artifact@v2
         with:
-          FAIL_BUILD: false
-          LW_ACCOUNT_NAME: ${{ secrets.LW_ACCOUNT_NAME1 }}
-          LW_ACCESS_TOKEN: ${{ secrets.LW_ACCESS_TOKEN1 }}
-          SCAN_LIBRARY_PACKAGES: true
-          SAVE_RESULTS_IN_LACEWORK: true
-          IMAGE_NAME: ${{ steps.image-details.outputs.image }}
-          IMAGE_TAG: ${{ steps.image-details.outputs.tag }}
+          name: account_data
+          path: account_data.json
 
-      - name: Scan container images for vulnerabitilies using Lacework (Account 2)
-        uses: timarenz/lw-scanner-action@v0.5.1
-        if: always()
-        with:
-          FAIL_BUILD: false
-          LW_ACCOUNT_NAME: ${{ secrets.LW_ACCOUNT_NAME2 }}
-          LW_ACCESS_TOKEN: ${{ secrets.LW_ACCESS_TOKEN2 }}
-          SCAN_LIBRARY_PACKAGES: true
-          SAVE_RESULTS_IN_LACEWORK: true
-          IMAGE_NAME: ${{ steps.image-details.outputs.image }}
-          IMAGE_TAG: ${{ steps.image-details.outputs.tag }}
+  set-matrix:
+    runs-on: ubuntu-latest
+    needs: build_matrix
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+    - uses: actions/download-artifact@v2
+      with:
+        name: account_data
+    - id: set-matrix
+      run: |
+        MATRIX=$(cat account_data.json|tr -d "\n"|tr -d " ")
+        echo $MATRIX
+        echo "::set-output name=matrix::${MATRIX}"
 
-      - name: Scan container images for vulnerabitilies using Lacework (Account 3)
-        uses: timarenz/lw-scanner-action@v0.5.1
-        if: always()
+  scan:
+    needs: set-matrix
+    strategy:
+      matrix:
+        ${{ fromJson(needs.set-matrix.outputs.matrix) }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - id: run-scan
+        uses: ./.github/scan-images
         with:
-          FAIL_BUILD: false
-          LW_ACCOUNT_NAME: ${{ secrets.LW_ACCOUNT_NAME3 }}
-          LW_ACCESS_TOKEN: ${{ secrets.LW_ACCESS_TOKEN3 }}
-          SCAN_LIBRARY_PACKAGES: true
-          SAVE_RESULTS_IN_LACEWORK: true
-          IMAGE_NAME: ${{ steps.image-details.outputs.image }}
-          IMAGE_TAG: ${{ steps.image-details.outputs.tag }}
-
-      - name: Scan container images for vulnerabitilies using Lacework (Account 4)
-        uses: timarenz/lw-scanner-action@v0.5.1
-        if: always()
-        with:
-          FAIL_BUILD: false
-          LW_ACCOUNT_NAME: ${{ secrets.LW_ACCOUNT_NAME4 }}
-          LW_ACCESS_TOKEN: ${{ secrets.LW_ACCESS_TOKEN4 }}
-          SCAN_LIBRARY_PACKAGES: true
-          SAVE_RESULTS_IN_LACEWORK: true
-          IMAGE_NAME: ${{ steps.image-details.outputs.image }}
-          IMAGE_TAG: ${{ steps.image-details.outputs.tag }}
-
-      - name: Scan container images for vulnerabitilies using Lacework (Account 5)
-        uses: timarenz/lw-scanner-action@v0.5.1
-        if: always()
-        with:
-          FAIL_BUILD: false
-          LW_ACCOUNT_NAME: ${{ secrets.LW_ACCOUNT_NAME5 }}
-          LW_ACCESS_TOKEN: ${{ secrets.LW_ACCESS_TOKEN5 }}
-          SCAN_LIBRARY_PACKAGES: true
-          SAVE_RESULTS_IN_LACEWORK: true
-          IMAGE_NAME: ${{ steps.image-details.outputs.image }}
-          IMAGE_TAG: ${{ steps.image-details.outputs.tag }}
+          matrix_details: ${{ secrets.MATRIX_INFO }}
+          account: ${{ matrix.accounts }}
+          image: ${{ matrix.images }}
+          docker_username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          docker_access_token: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
