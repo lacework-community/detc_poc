@@ -1,0 +1,11 @@
+name: 'build-matrix'
+description: 'Build a matrix for accounts and images'
+inputs:
+  matrix_details:
+    description: "json string of the account and image details"
+outputs:
+  matrix:
+    description: 'json string of the build matrix to use'
+runs:
+  using: 'node12'
+  main: 'dist/index.js'

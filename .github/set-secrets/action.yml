@@ -1,0 +1,16 @@
+name: 'set-secrets'
+description: 'Get the correct secret for this account'
+inputs:
+  matrix_details:
+    description: "JSON details of the matrix (accounts, images, tokens, etc)"
+    required: true
+outputs:
+  account:
+    description: 'name of the account to scan'
+  access_token:
+    description: 'access token to use for this account'
+  image:
+    description: 'image to scan'
+runs:
+  using: 'node12'
+  main: 'dist/index.js'
