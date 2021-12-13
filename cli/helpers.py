@@ -1,13 +1,12 @@
 import click
 import subprocess
-import shlex
-import time
 import sys
-import helpers
-import validators
 import os
 import json
+import time
+import validators
 
+from typing import Literal, Dict, Tuple, List
 # Disable track back details
 sys.tracebacklimit = 0
 
@@ -24,11 +23,11 @@ def kubectl(action, cluster_path, cluster, deployment_path):
     configure_kubectl(cluster, cluster_path)
     command = "kubectl get pods"
     click.echo(command)
-    helpers.run_command(command)
+    run_command(command)
   elif "get-services" == action.lower():
     configure_kubectl(cluster, cluster_path)
     command = "kubectl get services"
-    helpers.run_command(command)
+    run_command(command)
   else:
     raise Exception("kubectl action '{}' is NOT valid!".format(action))
 
@@ -57,7 +56,7 @@ def configure_kubectl(cluster, path):
     raise Exception("K8 Cluster '{}' is NOT a known.".format(cluster))
 
   click.echo("Configuring kubectl for '{}' K8 cluster".format(cluster))
-  helpers.run_command(command)
+  run_command(command)
 
 def kubectl_delete(deployment_path):
   if not deployment_path:
@@ -65,7 +64,7 @@ def kubectl_delete(deployment_path):
 
   validators.validate_file_exists(deployment_path)
   command = "kubectl delete -f {}".format(deployment_path)
-  helpers.run_command(command)
+  run_command(command)
 
 def kubectl_apply(deployment_path):
   if not deployment_path:
@@ -73,9 +72,9 @@ def kubectl_apply(deployment_path):
 
   validators.validate_file_exists(deployment_path)
   command = "kubectl apply -f {}".format(deployment_path)
-  helpers.run_command(command)
+  run_command(command)
 
-def terraform(action, path, deployment_path, skip_undeployment, env_variables={}):
+def terraform(action, path, deployment_path, skip_undeployment, env_variables={}, retry=False, retry_codes: List[int]=[1]):
   terrform_action = action
 
   if "init" == action.lower():
@@ -83,7 +82,7 @@ def terraform(action, path, deployment_path, skip_undeployment, env_variables={}
   elif "destroy" == action.lower():
     if not skip_undeployment:
       print("Attempting to delete pods with Kubectl.  Add '--skip-undeployment=true' to skip this step.")
-      helpers.kubectl_delete(deployment_path)
+      kubectl_delete(deployment_path)
     terrform_action += " -auto-approve"
   elif "plan" == action.lower():
     pass
@@ -97,11 +96,14 @@ def terraform(action, path, deployment_path, skip_undeployment, env_variables={}
   for key, value in env_variables.items():
     terraform_command = "export TF_VAR_{}='{}'; {}".format(key, value, terraform_command)
 
-  helpers.run_command(terraform_command)
+  if retry:
+    run_retryable_command(terraform_command, retry_codes, sleep_before_retry=30, times=3)
+  else:
+    run_command(terraform_command)
 
 def get_service_url_from_kubectl(service_name, cloud):
   command = "kubectl get service -o=json --field-selector metadata.name={}".format(service_name)
-  out = helpers.run_command(command, False)
+  out, _ = run_command(command, False)
   if(not out):
     raise Exception("Can't connect to kubectl for '{}'".format(cloud))
 
@@ -124,41 +126,54 @@ def get_service_url_from_kubectl(service_name, cloud):
 
   raise Exception("Can't get ip address from cloud '{}'".format(cloud))
 
-def get_traffic_terraform_path(cloud):
-  path = "/terraform"
-  if 'aws' == cloud.lower():
-    path += "/aws/traffic"
-  elif 'azure' == cloud.lower():
-    path += "/azure/traffic"
-  elif 'gcp' == cloud.lower():
-    path += "/gcp/traffic"
-  else:
-    raise Exception("Cloud provider '{}' is NOT valid!".format(cloud))
-  return path
+def get_terraform_path(project, cloud):
+    """Derive appropriate terraform code path based on inputs"""
+    if not cloud or cloud not in ['aws', 'azure', 'gcp'] or not project or project not in ['traffic', 'activity']:
+        raise Exception("Cloud provider '{}' or project '{}' is NOT valid!".format(cloud, project))
+
+    return '/terraform/{}/{}'.format(cloud, project)
+
+def run_terraform(action: Literal["init", "plan", "destroy", "apply"],
+                  project: Literal["traffic", "activity"],
+                  cloud: Literal["aws", "azure", "gcp"],
+                  deployment_path: str = "",
+                  env_vars: Dict = {},
+                  skip_undeployment: bool = True,
+                  retry: bool = False,
+                  retry_codes: List[int] = [1]) -> None:
+    """This function is used to launch terraform, supplying the appropriate project for where the source is and the
+    appropriate actions to take"""
+    terraform(action, get_terraform_path(project, cloud), deployment_path, skip_undeployment, env_vars, retry, retry_codes)
+
+def activity_tf(cloud, action: Literal["init", "plan", "apply", "destroy"]):
+    retry = False
+    if action == "apply":
+        retry = True
+    run_terraform(action, "activity", cloud, retry=retry)
 
 def traffic_init(cloud):
-  terrform_path = get_traffic_terraform_path(cloud)
+  terrform_path = get_terraform_path('traffic', cloud)
   terraform("init", terrform_path, "", True)
 
 def traffic_plan(cloud):
-  vote_url = helpers.get_service_url_from_kubectl("vote", cloud)
-  result_url = helpers.get_service_url_from_kubectl("result", cloud)
+  vote_url = get_service_url_from_kubectl("vote", cloud)
+  result_url = get_service_url_from_kubectl("result", cloud)
   env_variables = { "VOTE_URL": vote_url, "RESULT_URL": result_url }
 
-  terrform_path = get_traffic_terraform_path(cloud)
+  terrform_path = get_terraform_path('traffic', cloud)
   terraform("plan", terrform_path, "", True, env_variables)
 
 def traffic_deploy(cloud):
-  vote_url = helpers.get_service_url_from_kubectl("vote", cloud)
-  result_url = helpers.get_service_url_from_kubectl("result", cloud)
+  vote_url = get_service_url_from_kubectl("vote", cloud)
+  result_url = get_service_url_from_kubectl("result", cloud)
   env_variables = { "VOTE_URL": vote_url, "RESULT_URL": result_url }
 
-  terrform_path = get_traffic_terraform_path(cloud)
+  terrform_path = get_terraform_path('traffic', cloud)
   terraform("apply", terrform_path, "", True, env_variables)
 
 def traffic_destroy(cloud):
   env_variables = { "VOTE_URL": "","RESULT_URL": ""}
-  terrform_path = get_traffic_terraform_path(cloud)
+  terrform_path = get_terraform_path('traffic', cloud)
   terraform("destroy", terrform_path, "", True, env_variables)
 
 
@@ -166,40 +181,89 @@ def lacework_deploy_pods():
   lacework_access_token = os.environ.get('LACEWORK_ACCESS_TOKEN')
 
   command = "cp -f /deploys/lacework/lacework-cfg-k8s.yaml.example /deploys/lacework/lacework-cfg-k8s.yaml"
-  helpers.run_command(command)
+  run_command(command)
 
   command = "sed -i 's/LACEWORK_ACCESS_TOKEN/{}/' /deploys/lacework/lacework-cfg-k8s.yaml".format(lacework_access_token)
-  helpers.run_command(command)
+  run_command(command)
 
   command = "kubectl create -f /deploys/lacework/lacework-cfg-k8s.yaml"
-  helpers.run_command(command)
+  run_command(command)
 
   command = "kubectl create -f /deploys/lacework/lacework-k8s.yaml"
-  helpers.run_command(command)
+  run_command(command)
 
 def lacework_destroy_pods():
   command = "cp -f /deploys/lacework/lacework-cfg-k8s.yaml.example /deploys/lacework/lacework-cfg-k8s.yaml"
-  helpers.run_command(command)
+  run_command(command)
 
   command = "kubectl delete -f /deploys/lacework/lacework-cfg-k8s.yaml"
-  helpers.run_command(command)
+  run_command(command)
 
   command = "kubectl delete -f /deploys/lacework/lacework-k8s.yaml"
-  helpers.run_command(command)
+  run_command(command)
 
 def gcp_authenticate():
   command = "gcloud init"
-  helpers.run_command(command)
+  run_command(command)
   command = "gcloud auth application-default login"
-  helpers.run_command(command)
+  run_command(command)
 
 def gcp_enable_services():
   command = "gcloud services enable compute.googleapis.com"
-  helpers.run_command(command)
+  run_command(command)
   command = "gcloud services enable container.googleapis.com"
-  helpers.run_command(command)
+  run_command(command)
 
-def run_command(command, print_output=True):
+def run_retryable_command(
+        command: str,
+        retry_code: List[int],
+        success_code: int=0,
+        times: int=2,
+        print_output: bool=True,
+        sleep_before_retry: int=0):
+    """Use this function to run a command that's retryable on failure
+
+    command: string of the command to execute
+    retry_code: command will only be re-run if the exit code is in the retry_code list
+    success_code: what return code should be considered success for this command
+    times: how many retries should be attempted
+    print_output: should the command output be printed while running
+    sleep_before_retry: seconds to wait before trying the command again
+    """
+    executed = 0
+    failed = True
+    retryable = False
+    failed_retry_code = None
+
+    while executed < times and failed:
+        if executed > 0:
+            if sleep_before_retry > 0:
+               print(f"warning => '{command}' did not complete successfully, " + \
+                     f'sleeping {sleep_before_retry} seconds and then trying again [{executed} of {times} attempts]')
+               time.sleep(sleep_before_retry)
+            else:
+               print(f"warning => '{command}' did not complete successfully, re-running [{executed} of {times} attempts]")
+
+        _, ret_code = run_command(command, print_output)
+        if ret_code == success_code:
+            failed = False
+            break
+
+        executed += 1
+        if ret_code in retry_code:
+            retryable = True
+        else:
+            retryable = False
+            failed_retry_code = ret_code
+            break
+
+
+    if failed and not retryable:
+        print(f"error => {command} failed to run successfully and could not be retried (unexpected exit code {failed_retry_code})")
+    elif failed:
+        print(f"error => {command} failed to run after {times} attempts")
+
+def run_command(command, print_output=True) -> Tuple[str, int]:
   process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, encoding='utf-8')
   output = ""
   while True:
@@ -210,4 +274,4 @@ def run_command(command, print_output=True):
     if print_output == True:
       print(data, end="")
 
-  return output
+  return output, process.returncode

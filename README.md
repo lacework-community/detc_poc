@@ -67,6 +67,15 @@ Find the two externals URLs.  The pod that is listening on port 5000 will go in 
 
 [Deploying the loadgen project](loadgen/README.md)
 
+
+## Create additional activity in the cloud environments
+
+Outside the running apps and activity from load generation, the cloud enviornment may not have a ton of other activity
+depending on what it's used for.  This deployment will create additonal activity in Azure/GCP using service accounts.
+
+    docker-compose run detc activity-generation [azure|gcp] init
+    docker-compose run detc activity-generation [azure|gcp] [plan|deploy|destroy]
+
 ## Tearing it all down
 
 All the provisioned assets can be destroyed.

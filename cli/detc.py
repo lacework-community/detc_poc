@@ -1,12 +1,41 @@
 import click
 import validators
 import helpers
-import os
 
 @click.group()
 def cli():
   """Welcome to the DETC deployment tool"""
   pass
+
+@cli.command()
+@click.argument("cloud")
+@click.argument("action")
+def activity_generation(cloud, action):
+  """
+  Activity generation: For Azure or GCP, deploy a compute instance that generates cloud changes vai terraform
+
+  Example command: detc activity-generation azure init
+
+  \b
+  CLOUD:
+    azure: cloud provider
+    gcp: cloud provider
+  ACTION
+    init: Initializes terraform modules
+    plan: Runs terraform plan for cloud provider
+    deploy:  Provision a compute instance and install the http traffic driver
+    destroy: Destroy a compute instance
+  """
+  if "init" == action.lower():
+    helpers.activity_tf(cloud, "init")
+  elif "plan" == action.lower():
+    helpers.activity_tf(cloud, "plan")
+  elif "deploy" == action.lower():
+    helpers.activity_tf(cloud, "apply")
+  elif "destroy" == action.lower():
+    helpers.activity_tf(cloud, "destroy")
+  else:
+    raise Exception("Activity action '{}' is NOT known.".format(action))
 
 @cli.command()
 @click.argument("cloud")
