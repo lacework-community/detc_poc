@@ -1,0 +1,55 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<flow-definition plugin="workflow-job@2.42">
+  <actions>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobAction plugin="pipeline-model-definition@1.9.3"/>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction plugin="pipeline-model-definition@1.9.3">
+      <jobProperties/>
+      <triggers/>
+      <parameters/>
+      <options/>
+    </org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction>
+  </actions>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties/>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@2640.v00e79c8113de">
+    <script> pipeline {
+    agent { label 'docker' }
+
+    parameters {
+        string (name: 'IMAGE_NAME',
+                description: "Specify Image Name",
+                defaultValue: '')
+        string (name: 'IMAGE_TAG',
+                description: "Specify Image Tag",
+                defaultValue: '')
+    }
+
+    environment {
+      LW_ACCESS_TOKEN = credentials('lw-access-token')
+      LW_ACCOUNT_NAME = credentials('lw-account-name')
+    }
+
+
+    stages {
+        stage('Pull') {
+            steps {
+                echo 'Pulling image ...'
+                sh "docker pull ${IMAGE_NAME}:${IMAGE_TAG}" //Pull the image to scan
+            }
+        }
+        stage('Scan') {
+            steps {
+                sh "curl -L https://github.com/lacework/lacework-vulnerability-scanner/releases/latest/download/lw-scanner-linux-amd64 -o lw-scanner"
+                sh "chmod +x lw-scanner"
+                sh "./lw-scanner image evaluate ${IMAGE_NAME} ${IMAGE_TAG} --build-id ${BUILD_ID} --build-plan ${JOB_NAME} --save"
+            }
+        }
+    }
+}
+</script>
+    <sandbox>true</sandbox>
+  </definition>
+  <triggers/>
+  <disabled>false</disabled>
+</flow-definition>

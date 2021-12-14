@@ -54,7 +54,7 @@ module "eks" {
   subnets         = module.vpc.private_subnets
 
   tags = {
-    Environment = "demo"
+    Environment       = "demo"
     KubernetesCluster = local.cluster_name
   }
 

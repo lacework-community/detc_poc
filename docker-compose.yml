@@ -35,7 +35,7 @@ services:
       TF_VAR_DEPLOYMENT_NAME: salesdemo
 
       # Lacework access token
-      LACEWORK_ACCESS_TOKEN: REPLACE_WITH_LACEWORK_ACCESS_TOKEN
+      LACEWORK_ACCESS_TOKEN: REPLACE_WITH_LW_TOKEN
 
       # GCP project id/region
       TF_VAR_GCP_PROJECT_ID: REPLACE_WITH_GCP_PROJECT_ID

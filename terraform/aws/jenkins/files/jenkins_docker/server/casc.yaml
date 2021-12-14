@@ -1,0 +1,53 @@
+credentials:
+  system:
+    domainCredentials:
+      - credentials:
+        - usernamePassword:
+            id: "dockerhub-access-token"
+            username: ${DOCKERHUB_ACCESS_USER}
+            password: ${DOCKERHUB_ACCESS_TOKEN}
+        - string:
+            id: "lw-access-token"
+            secret: ${LW_ACCESS_TOKEN}
+            description: "lw access token"
+        - string:
+            id: "lw-account-name"
+            secret: ${LW_ACCESS_ACCOUNT}
+            description: "lw account name"
+        - string:
+            id: "k8s-cluster-name"
+            secret: ${K8S_CLUSTER_NAME}
+        - string:
+            id: "k8s-context-name"
+            secret: ${K8S_CONTEXT_NAME}
+        - string:
+            id: "k8s-server-url"
+            secret: ${K8S_SERVER_URL}
+        - string:
+            id: "k8s-build-robot-token"
+            secret: ${K8S_BUILD_ROBOT_TOKEN}
+
+jenkins:
+  securityRealm:
+    local:
+      allowsSignup: false
+      users:
+       - id: ${JENKINS_ADMIN_ID}
+         password: ${JENKINS_ADMIN_PASSWORD}
+  authorizationStrategy:
+    globalMatrix:
+      permissions:
+        - "Overall/Administer:admin"
+        - "Overall/Read:authenticated"
+  remotingSecurity:
+    enabled: true
+
+security:
+  queueItemAuthenticator:
+    authenticators:
+    - global:
+        strategy: "triggeringUsersAuthorizationStrategy"
+
+unclassified:
+  location:
+    url: http://${SERVER}:8080/
