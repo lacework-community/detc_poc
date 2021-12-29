@@ -21,17 +21,22 @@ Make sure to have all of these items ready before using this project:
    * GCP
    * Azure
 * access to a Lacework tenant with admin privileges
-* Docker and docker-compose setup on a computer
+* Docker setup on a computer
+* docker-compose (v1.25 or higher) setup on a computer
+
+## Docker setup for OSX
+
+Currently the best option for running Docker on OSX is to use Minikube.  Read [Docker setup on OSX](DockerSetupOSX.md) to find out how!
 
 ## Tools available in the docker container
 
-   terraform: 1.0.6
-   heroku cli: 7.59.0
-   kubectl: 1.22.1
-   helm: 3.0.2
-   aws cli: 1.20.48
-   azure cli: 2.0.81
-   gcp cli: 358.0.0
+    terraform: 1.0.6
+    heroku cli: 7.59.0
+    kubectl: 1.22.1
+    helm: 3.0.2
+    aws cli: 1.20.48
+    azure cli: 2.0.81
+    gcp cli: 358.0.0
 
 ## Provision a K8 Cluster
 
