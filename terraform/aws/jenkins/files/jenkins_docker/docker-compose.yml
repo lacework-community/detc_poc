@@ -1,0 +1,39 @@
+version: "3.9"
+    
+services:
+  server:
+    build: 
+      context: ./server
+      dockerfile: Dockerfile
+    stdin_open: true
+    tty: true
+    restart: always
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    environment:
+      JENKINS_ADMIN_ID:
+      JENKINS_ADMIN_PASSWORD:
+      LW_ACCESS_ACCOUNT:
+      LW_ACCESS_TOKEN:
+      K8S_CLUSTER_NAME:
+      K8S_CONTEXT_NAME:
+      K8S_SERVER_URL:
+      K8S_BUILD_ROBOT_TOKEN:
+      DOCKERHUB_ACCESS_TOKEN:
+      DOCKERHUB_ACCESS_USER:
+
+  agent:
+    build: 
+      context: ./agent
+      dockerfile: Dockerfile
+    stdin_open: true
+    tty: true
+    restart: always
+    depends_on:
+      - server
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      JENKINS_URL:
+      JENKINS_AUTH:

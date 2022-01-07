@@ -8,6 +8,37 @@ def cli():
   pass
 
 @cli.command()
+@click.argument("jenkins_admin_pass")
+@click.argument("dockerhub_access_token")
+@click.argument("lw_access_account")
+@click.argument("lw_access_token")
+@click.argument("lw_install_script")
+@click.argument("action")
+def jenkins(jenkins_admin_pass,
+            dockerhub_access_token,
+            lw_access_account,
+            lw_access_token,
+            lw_install_script,
+            action):
+  """
+  \b
+  jenkins_admin_pass dockerhub_access_token lw_access_account lw_access_token action
+  """
+  if "init" == action.lower():
+    helpers.jenkins_tf("aws", jenkins_admin_pass, dockerhub_access_token, lw_access_account, lw_access_token, lw_install_script, "init")
+  elif "plan" == action.lower():
+    helpers.jenkins_tf("aws", jenkins_admin_pass, dockerhub_access_token, lw_access_account, lw_access_token, lw_install_script, "plan")
+  elif "deploy" == action.lower():
+    cluster_path = helpers.get_k8_terraform_path("eks")
+    validators.validate_path_exists(cluster_path)
+    helpers.kubectl("apply", cluster_path, "eks", "/deploys/jenkins/build-robot-sa.yaml")
+    helpers.jenkins_tf("aws", jenkins_admin_pass, dockerhub_access_token, lw_access_account, lw_access_token, lw_install_script, "apply")
+  elif "destroy" == action.lower():
+    helpers.jenkins_tf("aws", jenkins_admin_pass, dockerhub_access_token, lw_access_account, lw_access_token, lw_install_script, "destroy")
+  else:
+    raise Exception("Activity action '{}' is NOT known.".format(action))
+
+@cli.command()
 @click.argument("cloud")
 @click.argument("action")
 def activity_generation(cloud, action):

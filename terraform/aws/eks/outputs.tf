@@ -4,6 +4,11 @@ output "cluster_id" {
   value       = module.eks.cluster_id
 }
 
+output "cluster_arn" {
+  description = "value"
+  value       = module.eks.cluster_arn
+}
+
 output "cluster_endpoint" {
   description = "EKS cluster endpoint for control plane"
   value       = module.eks.cluster_endpoint
@@ -33,3 +38,16 @@ output "cluster_name" {
   description = "EKS Cluster Name"
   value       = local.cluster_name
 }
+
+output "vpc_id" {
+  value = module.vpc.vpc_id
+}
+
+output "public_subnet_id" {
+  value = module.vpc.public_subnets
+}
+
+output "private_subnet_id" {
+  value = module.vpc.private_subnets
+}
+

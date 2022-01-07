@@ -19,3 +19,5 @@ kubeconfig_eks-*
 node_modules
 .pki
 pic*.png
+.jar
+*.zip

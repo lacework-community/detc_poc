@@ -3,6 +3,7 @@ import subprocess
 import sys
 import os
 import json
+import base64
 import time
 import validators
 
@@ -97,9 +98,16 @@ def terraform(action, path, deployment_path, skip_undeployment, env_variables={}
     terraform_command = "export TF_VAR_{}='{}'; {}".format(key, value, terraform_command)
 
   if retry:
-    run_retryable_command(terraform_command, retry_codes, sleep_before_retry=30, times=3)
+    run_retryable_command(terraform_command, retry_codes, sleep_before_retry=30, times=6)
   else:
     run_command(terraform_command)
+
+def get_build_robot_token_from_kubectl() -> str:
+    command = "kubectl get secret build-robot-secret -o=jsonpath='{.data.token}'"
+    out, _ = run_command(command, False)
+    if(not out):
+      raise Exception("Can't connect to kubectl for '{}'".format("aws"))
+    return base64.b64decode(out).decode('ascii')
 
 def get_service_url_from_kubectl(service_name, cloud):
   command = "kubectl get service -o=json --field-selector metadata.name={}".format(service_name)
@@ -128,13 +136,13 @@ def get_service_url_from_kubectl(service_name, cloud):
 
 def get_terraform_path(project, cloud):
     """Derive appropriate terraform code path based on inputs"""
-    if not cloud or cloud not in ['aws', 'azure', 'gcp'] or not project or project not in ['traffic', 'activity']:
+    if not cloud or cloud not in ['aws', 'azure', 'gcp'] or not project or project not in ['traffic', 'activity', 'jenkins']:
         raise Exception("Cloud provider '{}' or project '{}' is NOT valid!".format(cloud, project))
 
     return '/terraform/{}/{}'.format(cloud, project)
 
 def run_terraform(action: Literal["init", "plan", "destroy", "apply"],
-                  project: Literal["traffic", "activity"],
+                  project: Literal["traffic", "activity", "jenkins"],
                   cloud: Literal["aws", "azure", "gcp"],
                   deployment_path: str = "",
                   env_vars: Dict = {},
@@ -144,6 +152,31 @@ def run_terraform(action: Literal["init", "plan", "destroy", "apply"],
     """This function is used to launch terraform, supplying the appropriate project for where the source is and the
     appropriate actions to take"""
     terraform(action, get_terraform_path(project, cloud), deployment_path, skip_undeployment, env_vars, retry, retry_codes)
+
+def jenkins_tf(cloud,
+               jenkins_admin_pass,
+               dockerhub_access_token,
+               lw_access_account,
+               lw_access_token,
+               lw_install_script,
+               action: Literal["init", "plan", "apply", "destroy"]):
+    build_secret = ""
+    if action != "init":
+      build_secret = get_build_robot_token_from_kubectl()
+
+    retry = False
+    if action == "apply":
+        retry = True
+    run_terraform(action, "jenkins", cloud, retry=retry, env_vars={
+        'k8s_build_robot_token': build_secret,
+        'jenkins_admin': "admin",
+        'dockerhub_access_user': "ipcrm",
+        'jenkins_admin_password': jenkins_admin_pass,
+        'dockerhub_access_token': dockerhub_access_token,
+        'lw_access_account': lw_access_account,
+        'lw_access_token': lw_access_token,
+        'lacework_install_script': lw_install_script,
+    })
 
 def activity_tf(cloud, action: Literal["init", "plan", "apply", "destroy"]):
     retry = False
