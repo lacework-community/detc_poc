@@ -1,0 +1,52 @@
+name: Scan images in Lacework
+
+on: 
+  workflow_dispatch:
+  schedule:
+    - cron:  '* 0 * * *'
+
+jobs:
+  build_matrix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - id: build-matrix
+        uses: ./.github/build-matrix
+        with:
+          matrix_details: ${{ secrets.LOG4J_MATRIX_INFO }}
+      - uses: actions/upload-artifact@v2
+        with:
+          name: account_data
+          path: account_data.json
+
+  set-matrix:
+    runs-on: ubuntu-latest
+    needs: build_matrix
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+    - uses: actions/download-artifact@v2
+      with:
+        name: account_data
+    - id: set-matrix
+      run: |
+        MATRIX=$(cat account_data.json|tr -d "\n"|tr -d " ")
+        echo $MATRIX
+        echo "::set-output name=matrix::${MATRIX}"
+
+  scan:
+    needs: set-matrix
+    strategy:
+      matrix:
+        ${{ fromJson(needs.set-matrix.outputs.matrix) }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - id: run-scan
+        uses: ./.github/scan-images
+        with:
+          matrix_details: ${{ secrets.MATRIX_INFO }}
+          account: ${{ matrix.accounts }}
+          image: ${{ matrix.images }}
+          docker_username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          docker_access_token: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
