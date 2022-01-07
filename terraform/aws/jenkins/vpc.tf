@@ -1,3 +1,4 @@
+
 resource "aws_vpc" "vpc" {
   cidr_block = var.cidr_block
   tags = {
@@ -7,7 +8,7 @@ resource "aws_vpc" "vpc" {
 resource "aws_subnet" "subnet" {
   vpc_id                  = aws_vpc.vpc.id
   cidr_block              = var.subnet
-  availability_zone       = "us-east-2b"
+  availability_zone       = "${var.AWS_REGION}a"
   map_public_ip_on_launch = "true"
   tags = {
     Name = "jenkins_subnet"
@@ -17,7 +18,7 @@ resource "aws_subnet" "subnet1" {
   vpc_id                  = aws_vpc.vpc.id
   cidr_block              = var.subnet1
   map_public_ip_on_launch = "true"
-  availability_zone       = "us-east-2c"
+  availability_zone       = "${var.AWS_REGION}b"
   tags = {
     Name = "jenkins_subnet1"
   }

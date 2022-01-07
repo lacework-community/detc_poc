@@ -1,3 +1,7 @@
+variable "AWS_REGION" {
+  description = "AWS region.  Example: us-east-2"
+}
+
 terraform {
   required_providers {
     ssh = {
