@@ -1,9 +1,12 @@
-name: Scan images in Lacework
+name: Scan Log4J images in Lacework
 
 on: 
   workflow_dispatch:
   schedule:
     - cron:  '* 0 * * *'
+
+env:
+  THE_MATRIX: ${{ secrets.LOG4J_MATRIX_INFO }}
 
 jobs:
   build_matrix:
@@ -13,7 +16,7 @@ jobs:
       - id: build-matrix
         uses: ./.github/build-matrix
         with:
-          matrix_details: ${{ secrets.LOG4J_MATRIX_INFO }}
+          matrix_details: ${{ env.THE_MATRIX }}
       - uses: actions/upload-artifact@v2
         with:
           name: account_data
@@ -45,7 +48,7 @@ jobs:
       - id: run-scan
         uses: ./.github/scan-images
         with:
-          matrix_details: ${{ secrets.MATRIX_INFO }}
+          matrix_details: ${{ env.THE_MATRIX }}
           account: ${{ matrix.accounts }}
           image: ${{ matrix.images }}
           docker_username: ${{ secrets.DOCKER_HUB_USERNAME }}
