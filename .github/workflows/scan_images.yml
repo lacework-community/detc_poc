@@ -6,7 +6,7 @@ on:
     - cron:  '* 0 * * *'
 
 env:
-  THE_MATRIX: ${{ secrets.LOG4J_MATRIX_INFO }}
+  THE_MATRIX: ${{ secrets.MATRIX_INFO }}
 
 jobs:
   build_matrix:
