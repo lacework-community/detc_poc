@@ -26,14 +26,20 @@ module.exports = {
   replace_command_with_parameters: function (attack, options){
     // if the attack has parameters run each replacement for each command
     if(attack['parameter'] != undefined){
-      paramater = attack['parameter']
-      if(!options[paramater['option_key']]){
-        console.log('Must provide option: ' + paramater['option_key'])
-        process.exit(1);
+      let parameter = attack['parameter']
+      if (!Array.isArray(attack['parameter'])) {
+        parameter = [attack['parameter']]
       }
-      for (let key in attack['commands']) {
-        attack['commands'][key] = attack['commands'][key].replace(paramater['replace'], options[paramater['option_key']])
-      }
+
+      parameter.forEach(p => {
+        if(!options[p['option_key']]){
+          console.log('Must provide option: ' + p['option_key'])
+          process.exit(1);
+        }
+        for (let key in attack['commands']) {
+          attack['commands'][key] = attack['commands'][key].replace(p['replace'], options[p['option_key']])
+        }
+      })
     }
     return attack
   },
