@@ -1,6 +1,6 @@
 // Indefinitely invokes calls to the vote and result applications
 
-const request = require('request');
+var tiny = require('tiny-json-http')
 const fs = require('fs');
 
 const INTERVAL = 10000; // poll each service once every INTERVAL milliseconds
@@ -27,10 +27,14 @@ function loadResults() {
 }
 
 function getResults(cloud, url) {
- request(url, { }, (err, res, body) => {
-  if (err) { return console.log(err); }
-  console.log('Loaded results for ' + cloud + '!');
- });
+  tiny.get({url}, function _get(err, result) {
+    if (err) {
+      console.log(err)
+    }
+    else {
+      console.log('Loaded results for ' + cloud + '!');
+    }
+  })
 }
 
 function sendVote() {
@@ -42,14 +46,18 @@ function sendVote() {
 function postVote(cloud, url){
  const randomNum = Math.floor(Math.random() * 10) + 1;
  const vote = (randomNum % 2 == 0) ? 'a' : 'b';
- const formData = { vote: vote };
+ const data = {"vote":vote};
+ const headers = { 'content-type': 'application/x-www-form-urlencoded' }
 
- request.post({url: url, formData: formData}, function callback(err, httpResponse, body) {
-  if (err) {
-    return console.error('Vote POST failed for ' + cloud + ': ', err);
-  }
-  console.log('Successfully voted on ' + cloud + ' for ' + vote);
- });
+
+ tiny.post({url, data, headers}, function __posted(err, result) {
+    if (err) {
+      return console.error('Vote POST failed for ' + cloud + ': ', err);
+    }
+    else {
+      console.log('Successfully voted on ' + cloud + ' for ' + vote);
+    }
+  })
 }
 
 setInterval(() => {
